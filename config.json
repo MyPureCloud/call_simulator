@@ -1,0 +1,15 @@
+{
+    "edgeServer" : "172.19.33.192",
+    "stations" : ["100"],
+    "callSimulator" :{
+        "concurrentCalls" : 1,
+        "callDuration" : 120,
+        "calls" : [
+            {
+                "to" : "555"
+                "fromNumber" : ""
+                "fromName" : "2222222"
+            }
+        ]
+    }
+}
