@@ -27,7 +27,7 @@ function determineIpAddress(){
         }
         ++alias;
 
-        if(ifname === "en0" || ifname == "eth0" || ifname == "eth1" ){
+        if(ifname === "en0" || ifname == "eth0" || ifname == "eth1" || ifname == "Ethernet"){
             ip = iface.address;
         }
       });
@@ -42,19 +42,22 @@ var util = require('util');
 var os = require('os');
 
 module.exports = function(){
-
+    var ipAddress = determineIpAddress();
 //node make_call.js 'sut <sip:[service]@[remote_ip]:[remote_port]>'
 
 
     var dialogs = {};
+    var stations = [];
+    var busyNumber = '5556666';
 
     function rstring() { return Math.floor(Math.random()*1e6).toString(); }
-
+    function getId(rq){ return [rq.headers['call-id'], rq.headers.from.params.tag].join(':'); }
     function handleSipRequest(rq){
+      try{
         console.log('got message ' +  JSON.stringify(rq));
+        var id = getId(rq);
 
         if(rq.headers.to.params.tag) { // check if it's an in dialog request
-            var id = [rq.headers['call-id'], rq.headers.to.params.tag, rq.headers.from.params.tag].join(':');
 
             if(dialogs[id]){
                 dialogs[id](rq);
@@ -67,17 +70,54 @@ module.exports = function(){
 
         }
 
-        switch (request.method) {
+        switch (rq.method) {
             case 'INVITE': {
-                var ringing = sip.makeResponse(request, 180, 'Ringing');
-                sip.send(ringing);
+              //  var ringing = sip.makeResponse(rq, 180, 'Ringing');
+                var user = sip.parseUri(rq.headers.to.uri).user;
+                console.log("INVITE for " + user);
 
-                setTimeout(function () {
-                    var busy = sip.makeResponse(request, 486, 'Busy Here');
-                    sip.send(busy);
-                }, 1300);
+                if(user.indexOf(busyNumber) > -1){
+                  setTimeout(function () {
+                       var busy = sip.makeResponse(rq, 486, 'Busy Here');
+                       sip.send(busy);
+                   }, 1300);
+                }else{
+                  //INVITE for a station or a normal call
+                  var trying = sip.makeResponse(rq, 100, 'Trying');
+                  var to = trying.headers.to;
+                  trying.headers.contact = [{uri: to.uri}]
+                  sip.send(trying);
+
+                  var ok = sip.makeResponse(rq, 200, "OK");
+                  ok.headers.contact = [{uri: to.uri}];
+                  ok.headers.supported = "100rel, replaces",
+                  ok.headers.allow= ["INVITE", "ACK", "BYE", "CANCEL", "OPTIONS", "INFO", "MESSAGE", "SUBSCRIBE", "NOTIFY", "PRACK", "UPDATE", "REFER"],
+                  ok.headers['Accept-Language'] = 'en';
+                  ok.headers['Content-Type'] = "application/sdp";
+                  ok.content=
+                    'v=0\r\n'+
+                    'o=- 13374 13374 IN IP4 '+ ipAddress +'\r\n'+
+                    's=Polycom IP Phone\r\n'+
+                    'c=IN IP4 '+ ipAddress +'\r\n'+
+                    't=0 0\r\n'+
+                    'm=audio 16424 RTP/AVP 0 8 101\r\n'+
+                    'a=rtpmap:0 PCMU/8000\r\n'+
+                    'a=rtpmap:8 PCMA/8000\r\n'+
+                    'a=rtpmap:101 telephone-event/8000\r\n'+
+                    'a=fmtp:101 0-15\r\n'+
+                    'a=ptime:30\r\n'+
+                    'a=sendrecv\r\n';
+                    sip.send(ok);
+                }
 
                 break;
+            }
+            case 'BYE' :{
+              console.log('call received bye');
+              console.log("ending call " + id);
+              delete dialogs[id];
+
+              sip.send(sip.makeResponse(rq, 200, 'Ok'));
             }
 
             case 'ACK': {
@@ -88,13 +128,17 @@ module.exports = function(){
                 sip.send(sip.makeResponse(rq, 405, 'Method not allowed'));
             };
         }
-
+      }catch(err){
+        console.log("ERROR " + JSON.stringify(err));
+        console.log(new Error().stack);
+      }
     }
 
     //starting stack
     sip.start({}, handleSipRequest);
 
     function handleInCallMethods(rq){
+        var id = getId(rq);
         console.log('in call method ' + JSON.stringify(rq));
         if(rq.method === 'BYE') {
           console.log('call received bye');
@@ -125,9 +169,8 @@ module.exports = function(){
     }
 
     function registerPhonesImpl(stationList, serverIp){
-        var ipAddress = determineIpAddress();
-
-        for(var station in stationList){
+        for(var index in stationList){
+            var station = stationList[index];
             console.log("registering phone " + station);
             var to = station;
             var port = 5060;
@@ -158,42 +201,41 @@ module.exports = function(){
         }
     }
 
-
+/*
     function sendInvite(to,from, contactUri, callback){
-        sip.send({
-          method: 'INVITE',
-          uri: to,
-          headers: {
-            to: {uri: to},
-            from: {uri: from, params: {tag: rstring()}},
-            'call-id': rstring(),
-            cseq: {method: 'INVITE', seq: Math.floor(Math.random() * 1e5)},
-            'content-type': 'application/sdp',
-            contact: [{uri: contactUri}]
-          },
-          content:
-            'v=0\r\n'+
-            'o=- 13374 13374 IN IP4 172.16.2.2\r\n'+
-            's=-\r\n'+
-            'c=IN IP4 172.16.2.2\r\n'+
-            't=0 0\r\n'+
-            'm=audio 16424 RTP/AVP 0 8 101\r\n'+
-            'a=rtpmap:0 PCMU/8000\r\n'+
-            'a=rtpmap:8 PCMA/8000\r\n'+
-            'a=rtpmap:101 telephone-event/8000\r\n'+
-            'a=fmtp:101 0-15\r\n'+
-            'a=ptime:30\r\n'+
-            'a=sendrecv\r\n'
-        },
+
         callback);
 
-    }
+    }*/
     // Making the call
-    function makeCallImpl(to){
-        var ipAddress = determineIpAddress();
-        console.log("starting on IP " + ipAddress );
+    function makeCallImpl(to, remoteName, remoteNumber){
 
-        sendInvite(to, "sip:test@test", "sip:101@" + ipAddress,
+        //sendInvite(to, remoteNumber, "sip:101@" + ipAddress,
+        sip.send({
+            method: 'INVITE',
+            uri: to,
+            headers: {
+              to: {uri: to},
+              from: {uri: remoteNumber, params: {tag: rstring()}, name: remoteName},
+              'call-id': rstring(),
+              cseq: {method: 'INVITE', seq: Math.floor(Math.random() * 1e5)},
+              'content-type': 'application/sdp',
+              contact: [{uri: "sip:101@" + ipAddress,}]
+            },
+            content:
+              'v=0\r\n'+
+              'o=- 13374 13374 IN IP4 172.16.2.2\r\n'+
+              's=-\r\n'+
+              'c=IN IP4 172.16.2.2\r\n'+
+              't=0 0\r\n'+
+              'm=audio 16424 RTP/AVP 0 8 101\r\n'+
+              'a=rtpmap:0 PCMU/8000\r\n'+
+              'a=rtpmap:8 PCMA/8000\r\n'+
+              'a=rtpmap:101 telephone-event/8000\r\n'+
+              'a=fmtp:101 0-15\r\n'+
+              'a=ptime:30\r\n'+
+              'a=sendrecv\r\n'
+          },
             function(rs) {
 
               if(rs.status >= 300) {
@@ -209,7 +251,7 @@ module.exports = function(){
 
                 sendAck(rs.headers.contact[0].uri, rs.headers.to, rs.headers.from, rs.headers['call-id'], rs.headers.cseq.seq);
 
-                var id = [rs.headers['call-id'], rs.headers.from.params.tag, rs.headers.to.params.tag].join(':');
+                var id = getId(rs);
 
                 // registring our 'dialog' which is just function to process in-dialog requests
                 if(!dialogs[id]) {
@@ -220,8 +262,8 @@ module.exports = function(){
     }
 
     return {
-      makeCall: function(to, remoteName) {
-          return makeCallImpl(to);
+      makeCall: function(to, remoteName, remoteNumber) {
+          return makeCallImpl(to, remoteName, remoteNumber);
       },
       registerPhones:function(stationList, serverIp){
           return registerPhonesImpl(stationList, serverIp);

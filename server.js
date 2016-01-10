@@ -1,7 +1,7 @@
 var sipEngine = require('./sip_engine.js')();
 
-//sipEngine.makeCall('sip:555@morbo.dev2000.com')
-sipEngine.registerPhones([100], '172.19.33.192');
+sipEngine.makeCall('sip:555@morbo.dev2000.com', "Kevin Glinski", '8723000')
+//sipEngine.registerPhones([100], '172.19.33.192');
 
 var http = require("http");
 var fs = require("fs");
