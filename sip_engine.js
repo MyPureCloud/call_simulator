@@ -1,53 +1,17 @@
 // Initiating a call example. Note: we use bogus sdp, so no real rtp session will be established.
 
 //  https://gist.github.com/mheadd/906216
-
-function determineIpAddress(){
-
-    var os = require('os');
-    var ifaces = os.networkInterfaces();
-
-    var ip = '';
-
-    Object.keys(ifaces).forEach(function (ifname) {
-      var alias = 0;
-
-      ifaces[ifname].forEach(function (iface) {
-        if ('IPv4' !== iface.family || iface.internal !== false) {
-          // skip over internal (i.e. 127.0.0.1) and non-ipv4 addresses
-          return;
-        }
-
-        if (alias >= 1) {
-          // this single interface has multiple ipv4 addresses
-          console.log(ifname + ':' + alias, iface.address);
-        } else {
-          // this interface has only one ipv4 adress
-          console.log(ifname, iface.address);
-        }
-        ++alias;
-
-        if(ifname === "en0" || ifname == "eth0" || ifname == "eth1" || ifname == "Ethernet"){
-            ip = iface.address;
-        }
-      });
-    });
-
-    //ip = '172.17.50.127'
-    return ip;
-}
-
 var sip = require('sip');
 var util = require('util');
 var os = require('os');
 
-module.exports = function(){
-    var ipAddress = determineIpAddress();
+module.exports = function(ipAddress){
 //node make_call.js 'sut <sip:[service]@[remote_ip]:[remote_port]>'
 
 
     var dialogs = {};
     var stations = [];
+    var currentOutboundCalls = 0;
     var busyNumber = '5556666';
 
     function rstring() { return Math.floor(Math.random()*1e6).toString(); }
@@ -142,7 +106,8 @@ module.exports = function(){
         console.log('in call method ' + JSON.stringify(rq));
         if(rq.method === 'BYE') {
           console.log('call received bye');
-
+          currentOutboundCalls = currentOutboundCalls - 1;
+          console.log("current calls in progress");
           delete dialogs[id];
 
           sip.send(sip.makeResponse(rq, 200, 'Ok'));
@@ -191,26 +156,17 @@ module.exports = function(){
 
             sip.send(register, function(rs) {
                 console.log("registration of " + to + " " + rs.status);
-    /*
-              sip.destroy();
-              return res.json({
-                result:ress
-              })
-              */
+                if(rs.status === 200){
+                    stations.push(station);
+                }
             });
         }
     }
 
-/*
-    function sendInvite(to,from, contactUri, callback){
-
-        callback);
-
-    }*/
     // Making the call
     function makeCallImpl(to, remoteName, remoteNumber){
+        to = "sip:" + to + "@" + ipAddress;
 
-        //sendInvite(to, remoteNumber, "sip:101@" + ipAddress,
         sip.send({
             method: 'INVITE',
             uri: to,
@@ -245,10 +201,14 @@ module.exports = function(){
                 console.log('call progress status ' + rs.status);
               }
               else {
-
                 // yes we can get multiple 2xx response with different tags
                 console.log('call answered with tag ' + rs.headers.to.params.tag);
-
+/*
+                if (!rs.headers.to.params.tag){
+                    console.log("invalid call!");
+                }
+*/                
+                currentOutboundCalls = currentOutboundCalls + 1;
                 sendAck(rs.headers.contact[0].uri, rs.headers.to, rs.headers.from, rs.headers['call-id'], rs.headers.cseq.seq);
 
                 var id = getId(rs);
@@ -267,6 +227,12 @@ module.exports = function(){
       },
       registerPhones:function(stationList, serverIp){
           return registerPhonesImpl(stationList, serverIp);
+      },
+      getRegisteredStations: function(){
+          return stations;
+      },
+      getCurrentOutboundCallCount:function(){
+          return currentOutboundCalls;
       }
     };
 }

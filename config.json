@@ -1,14 +1,18 @@
 {
-    "edgeServer" : "172.19.33.192",
+    "edgeServer" : {
+        "ip": "172.19.33.192",
+        "name" : "my edge"
+
+    },
     "stations" : ["100"],
     "callSimulator" :{
         "concurrentCalls" : 1,
-        "callDuration" : 120,
+        "interval" : 10,
         "calls" : [
             {
-                "to" : "555"
-                "fromNumber" : ""
-                "fromName" : "2222222"
+                "to" : "555",
+                "fromNumber" : "2222222",
+                "fromName" : "kevin glinski"
             }
         ]
     }
