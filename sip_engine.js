@@ -27,8 +27,11 @@ module.exports = function(ipAddress){
                 dialogs[id](rq);
             }
             else{
+
                 console.log(rq.method);
                 console.log("call doesn't exist");
+                console.log(JSON.stringify(dialogs));
+                console.log(id)
                 sip.send(sip.makeResponse(rq, 481, "Call doesn't exist"));
             }
 
@@ -107,7 +110,7 @@ module.exports = function(ipAddress){
         if(rq.method === 'BYE') {
           console.log('call received bye');
           currentOutboundCalls = currentOutboundCalls - 1;
-          console.log("current calls in progress");
+          console.log("current calls in progress " + currentOutboundCalls);
           delete dialogs[id];
 
           sip.send(sip.makeResponse(rq, 200, 'Ok'));
@@ -145,14 +148,17 @@ module.exports = function(ipAddress){
               method : 'REGISTER',
               uri : 'sip:' + to + '@' + serverIp + ':' + port,
               headers: {
-                to : { uri : 'sip:' + to + '@' + serverIp + ':' + port },
-                from: {uri: 'sip:test@test', params: {tag: rstring()}},
+                to : { uri : 'sip:' + to + '@' + serverIp},
+                from: {uri: 'sip:' + to + '@' + serverIp  , params: {tag: rstring()}},
                 'call-id': rstring(),
                 cseq: { method : 'REGISTER', seq: Math.floor(Math.random() * 1e5) },
                 contact : [ { uri: 'sip:' + to + '@' + ipAddress } ],
-                'Max-Forwards': 70
+                'Max-Forwards': 70,
+                'Expires' : 3600
               }
             };
+
+            console.log("registering phone " + register.uri);
 
             sip.send(register, function(rs) {
                 console.log("registration of " + to + " " + rs.status);
@@ -165,7 +171,6 @@ module.exports = function(ipAddress){
 
     // Making the call
     function makeCallImpl(to, remoteName, remoteNumber){
-        to = "sip:" + to + "@" + ipAddress;
 
         sip.send({
             method: 'INVITE',
@@ -207,16 +212,22 @@ module.exports = function(ipAddress){
                 if (!rs.headers.to.params.tag){
                     console.log("invalid call!");
                 }
-*/                
-                currentOutboundCalls = currentOutboundCalls + 1;
-                sendAck(rs.headers.contact[0].uri, rs.headers.to, rs.headers.from, rs.headers['call-id'], rs.headers.cseq.seq);
+
+*/
 
                 var id = getId(rs);
 
-                // registring our 'dialog' which is just function to process in-dialog requests
+                currentOutboundCalls = currentOutboundCalls + 1;
                 if(!dialogs[id]) {
-                  dialogs[id] = handleInCallMethods;
+                  console.log('adding call to dialog list ' + id);
+                  dialogs[id] = handleInCallMethods;// 'true';// handleInCallMethods;
+                  console.log(JSON.stringify(dialogs));
                 }
+                sendAck(rs.headers.contact[0].uri, rs.headers.to, rs.headers.from, rs.headers['call-id'], rs.headers.cseq.seq);
+
+
+                // registring our 'dialog' which is just function to process in-dialog requests
+
               }
             });
     }

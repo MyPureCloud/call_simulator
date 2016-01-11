@@ -1,4 +1,4 @@
-module.exports = function(sipEngine){
+module.exports = function(sipEngine, ipAddress){
 
     var status = {
         simulation:{
@@ -24,7 +24,9 @@ module.exports = function(sipEngine){
 
             console.log("placing call to " + outboundCall.to);
 
-            sipEngine.makeCall(outboundCall.to, outboundCall.fromName, outboundCall.fromNumber);
+            sipEngine.makeCall("sip:" + outboundCall.to + "@" + configuration.edgeServer.ip + ":5060"  ,
+                                outboundCall.fromName,
+                                "sip:" + outboundCall.fromNumber +"@" +ipAddress + ":5060");
         }
     }
 
@@ -33,13 +35,14 @@ module.exports = function(sipEngine){
         configuration.callSimulator.interval = configuration.callSimulator.interval || 10;
 
         //setup station list
-        sipEngine.registerPhones(configuration.stations);
-
+        sipEngine.registerPhones(configuration.stations, configuration.edgeServer.ip);
+/*
         outboundCallInterval = setInterval(function(){
             outboundCallSim(configuration);
         }, configuration.callSimulator.interval * 1000);
+*/
+        //outboundCallSim(configuration);
 
-        outboundCallSim(configuration);
     }
 
     return {

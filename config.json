@@ -1,16 +1,17 @@
 {
     "edgeServer" : {
-        "ip": "172.19.33.192",
+        "ip": "172.19.34.33",
+        "ippc": "172.18.182.10",
         "name" : "my edge"
 
     },
-    "stations" : ["100"],
+    "stations" : ["GlinskiSim", "GlinskiSim_1"],
     "callSimulator" :{
         "concurrentCalls" : 1,
         "interval" : 10,
         "calls" : [
             {
-                "to" : "555",
+                "to" : "glinskitestqueue",
                 "fromNumber" : "2222222",
                 "fromName" : "kevin glinski"
             }

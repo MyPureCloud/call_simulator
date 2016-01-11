@@ -49,12 +49,13 @@ function loadConfigurationFile(callback){
       }
       console.log("Got configuration");
       console.log(data.toString());
-      
+
       callback(JSON.parse(data.toString()));
     });
 }
-var sipEngine = require('./sip_engine.js')(determineIpAddress());
-var simulator = require('./simulator.js')(sipEngine);
+var ipAddress = determineIpAddress();
+var sipEngine = require('./sip_engine.js')(ipAddress);
+var simulator = require('./simulator.js')(sipEngine, ipAddress);
 
 //sipEngine.makeCall('sip:555@morbo.dev2000.com', "Kevin Glinski", '8723000')
 //sipEngine.registerPhones([100], '172.19.33.192');
