@@ -1,9 +1,9 @@
 function getStatus(){
     $.getJSON('/status', function (status) {
         $("#callsPlaced").html(status.simulation.callsPlaced);
-        $("#callsReceived").html(status.simulation.callsReceived);
+        $("#callsInProgress").html(status.simulation.callsInProgress);
         $("#registeredPhones").html(status.stations.registeredPhoneList.length);
-        $("#simulatorIp").html(status.simIp);
+        $(".simulatorIp").html(status.simIp);
 
         if(status.isRunning){
             $("#startSimulation").hide();
@@ -43,4 +43,6 @@ $(function() {
         event.preventDefault();
         return false;
     });
+
+    setInterval(getStatus, 3000);
 });

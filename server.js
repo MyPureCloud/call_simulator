@@ -53,8 +53,8 @@ function loadConfigurationFile(callback){
       }
       console.log("Got configuration");
       console.log(data.toString());
-      _configuration = JSON.parse(data.toString());
 
+      _configuration = JSON.parse(data.toString());
       callback(JSON.parse(data.toString()));
     });
 }
@@ -118,5 +118,8 @@ var httpServer = http.createServer(app);
 
 var port = 8888;
 console.log("starting on " + port);
+
+var open = require('open');
+open('http://localhost:'+port);
 
 httpServer.listen(port);

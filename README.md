@@ -3,10 +3,12 @@ The call simulator is a NodeJS application that can connect to your Edge to simu
 
 
 # Running Locally
-run
 ```
-npm install
-node server.js
+npm install -g https://github.com/MyPureCloud/call_simulator
+```
+
+```
+callsim
 ```
 
 open a web browser to http://localhost:8888 and fill out the configuration for your server.
