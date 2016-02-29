@@ -14,5 +14,8 @@
         "emailjs": "*",
         "body-parser": "*"
     },
-    "license": "MPLv2"
+    "license": "MIT",
+    "bin":{
+        "callsim" : "./server.js"
+    }
 }
