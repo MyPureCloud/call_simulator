@@ -49,13 +49,34 @@ function determineIpAddress(){
 function loadConfigurationFile(callback){
     fs.readFile( __dirname + '/config.json', function (err, data) {
       if (err) {
-        throw err;
-      }
-      console.log("Got configuration");
-      console.log(data.toString());
+          _configuration = {
+                                edgeServer: {
+                                  ip: ""
+                                },
+                                stations: [
 
-      _configuration = JSON.parse(data.toString());
-      callback(JSON.parse(data.toString()));
+                                ],
+                                callSimulator: {
+                                  concurrentCalls: "10",
+                                  interval: "10",
+                                  calls: [
+                                    {
+                                      to: "555",
+                                      fromNumber: "555-555-5555",
+                                      fromName: "John Doe"
+                                    }
+                                  ]
+                                }
+                            };
+
+      }else{
+          console.log("Got configuration");
+          console.log(data.toString());
+          _configuration = JSON.parse(data.toString());
+
+      }
+
+      callback(_configuration);
     });
 }
 var ipAddress = determineIpAddress();
