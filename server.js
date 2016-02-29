@@ -6,6 +6,9 @@ var https = require("https");
 var bodyParser = require('body-parser');
 var express = require('express');
 var app = express();
+app.use(bodyParser.json());
+
+var _configuration = {};
 
 function determineIpAddress(){
 
@@ -49,6 +52,7 @@ function loadConfigurationFile(callback){
       }
       console.log("Got configuration");
       console.log(data.toString());
+      _configuration = JSON.parse(data.toString());
 
       callback(JSON.parse(data.toString()));
     });
@@ -63,10 +67,51 @@ loadConfigurationFile(function(config){
     simulator.start(config);
 });
 
-app.get('/', function (req, res) {
-  res.send('Hello World!');
+
+app.get('/status', function (req, res) {
+    res.setHeader('content-type', 'application/javascript');
+    var status = simulator.status();
+    status.simIp = ipAddress;
+    res.send(status);
 });
 
+app.post('/configuration', function (req, res) {
+    console.log("new configuration");
+    console.log(req.body);
+    _configuration = req.body;
+    fs.writeFileSync( __dirname + '/config.json', JSON.stringify(_configuration));
+    res.send("");
+});
+
+app.get('/configuration', function (req, res) {
+    res.setHeader('content-type', 'application/javascript');
+    res.send(_configuration);
+});
+
+app.get('/startsimulation', function (req, res) {
+    simulator.start(_configuration);
+    res.send();
+});
+
+app.get('/stopsimulation', function (req, res) {
+    simulator.stop(_configuration);
+    res.send();
+});
+
+
+app.all('/dial/:number', function (req, res) {
+    var number = req.params.number;
+    console.log(_configuration);
+    var to = "sip:" + number + "@" + _configuration.edgeServer.ip + ":5060";
+
+    sipEngine.makeCall( to ,
+                        "Simulator",
+                        "sip:" + number +"@" +ipAddress + ":5060");
+
+    res.send("");
+});
+
+app.use(express.static(__dirname + '/public'));
 
 var httpServer = http.createServer(app);
 

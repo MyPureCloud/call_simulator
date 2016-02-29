@@ -5,16 +5,17 @@
     <link href="app.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/js/bootstrap-switch.js"></script>
-
+    <script src="code.js"></script>
+    <title>PureCloud Call Simulator</title>
 </head>
 <body>
     <div style="width:80%;margin-left:auto;margin-right:auto">
         <div class="page-header">
           <h1>Call Simulator<small>
-              <button class='btn btn-primary'>
+              <a href="/configuration.html" class='btn btn-primary'>
                   Configuration  <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
 
-              </button>
+              </a>
           </small></h1>
         </div>
         <div class="panel panel-default">
@@ -25,15 +26,37 @@
             <div class="container">
               <div class="row">
                   <div class="col-md-2"><b>Edge</b></div>
-                  <div class="col-md-6">{{edgeName}}{{edgeIp}}</div>
+                  <div class="col-md-6" id="edgeName">{{edgeName}}{{edgeIp}}</div>
               </div>
               <div class="row">
-                  <div class="col-md-2"><b>Device IP</b></div>
-                  <div class="col-md-6">{{deviceIp}}</div>
+                  <div class="col-md-2"><b>Simulator IP</b></div>
+                  <div class="col-md-6" id="simulatorIp">{{deviceIp}}</div>
               </div>
             </div>
 
         </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Place Call</h3>
+      </div>
+      <div class="panel-body">
+
+
+<form class="form-horizontal">
+    <div class="form-group">
+          <div class="col-sm-4">
+               <input class="form-control" id="dialNumber" placeholder="PureCloud number to dial">
+               Enter the extension of the device connected to the edge.  sip: and @edgeIp are not required.
+          </div>
+          <button class="col-sm-2 btn btn-primary" id='dial'>Dial</button>
+
+        </div>
+    </form>
+
+
+      </div>
     </div>
 
         <div class="panel panel-default">
@@ -46,8 +69,8 @@
  <form class="form-horizontal">
             <div class="form-group">
               <div class="col-sm-6">
-                  <button type="button" class="btn btn-success">Start Simulation</button>
-                  <button type="button" class="btn btn-danger">Stop Simulation</button>
+                  <button type="button" class="btn btn-success" id="startSimulation">Start Simulation</button>
+                  <button type="button" class="btn btn-danger" id="stopSimulation">Stop Simulation</button>
               </div>
 
             </div>
@@ -55,9 +78,11 @@
                 <div class="col-sm-12">
                 <ul class="list-unstyled">
                     <li>
-                      <div>Calls Placed <span class="badge">42</span></div>
+                      <div>Calls Placed <span class="badge" id='callsPlaced'>42</span></div>
                     </li>
-
+                    <li>
+                      <div>Calls Received <span class="badge" id='callsReceived'>42</span></div>
+                    </li>
                 </ul>
             </div>
 
@@ -65,15 +90,13 @@
             <div class="form-group">
               <div class="col-sm-4">
                    <input class="form-control" id="dialNumber" placeholder="PureCloud number to dial">
+                   Enter the extension of the device connected to the edge.  sip: and @edgeIp are not required.
               </div>
-              <button class="col-sm-2 btn btn-primary" for="exampleInputEmail1">Dial</button>
+              <button class="col-sm-2 btn btn-primary" id='dial'>Dial</button>
 
             </div>
         </form>
 
-
-          </div>
-        </div>
         <div class="panel panel-default">
           <div class="panel-heading">
             <h3 class="panel-title">Stations</h3>
@@ -82,12 +105,13 @@
 
               <ul class="list-inline">
                   <li>
-                    <div>Phones <span class="badge">42</span></div>
+                    <div>Phones <span class="badge" id="configuredPhones">42</span></div>
                   </li>
                   <li>
-                    <div>Registered <span class="badge">42</span></div>
+                    <div>Registered <span class="badge" id="registeredPhones">42</span></div>
                   </li>
               </ul>
+              <!--
               <ul class='list-unstyled'>
                   <li>
                       <span class="label label-success">Registered Phone</span>
@@ -95,9 +119,14 @@
                   <li>
                       <span class="label label-danger">Not Registered Phone</span>
                   </li>
-              </ul>
+              </ul>-->
           </div>
         </div>
+
+
+          </div>
+        </div>
+
     </div>
 </body>
 </html>

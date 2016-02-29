@@ -7,7 +7,8 @@ module.exports = function(sipEngine, ipAddress){
         },
         stations:{
             registeredPhoneList:[]
-        }
+        },
+        isRunning: false
     };
 
     var outboundCallIndex = 0;
@@ -36,12 +37,29 @@ module.exports = function(sipEngine, ipAddress){
 
         //setup station list
         sipEngine.registerPhones(configuration.stations, configuration.edgeServer.ip);
-/*
+
         outboundCallInterval = setInterval(function(){
             outboundCallSim(configuration);
         }, configuration.callSimulator.interval * 1000);
-*/
+
         //outboundCallSim(configuration);
+
+        status.isRunning = true;
+    }
+
+    function stopSimulation(){
+        try{
+            console.log("stopping simulation");
+            status.isRunning = false;
+
+            if(outboundCallInterval){
+                clearInterval(outboundCallInterval);
+            }
+        }
+        catch(ex){
+            console.log("Error stopping simulation");
+            console.log(ex);
+        }
 
     }
 
@@ -53,9 +71,7 @@ module.exports = function(sipEngine, ipAddress){
           return startSimulation(configuration);
       },
       stop: function(){
-          if(outboundCallInterval){
-              clearInterval(outboundCallInterval);
-          }
+          stopSimulation();
       }
     };
 };

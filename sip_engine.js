@@ -4,12 +4,13 @@
 var sip = require('sip');
 var util = require('util');
 var os = require('os');
+var dialogs = { 'foo': 'bar'};
 
 module.exports = function(ipAddress){
 //node make_call.js 'sut <sip:[service]@[remote_ip]:[remote_port]>'
 
 
-    var dialogs = {};
+
     var stations = [];
     var currentOutboundCalls = 0;
     var busyNumber = '5556666';
@@ -171,6 +172,7 @@ module.exports = function(ipAddress){
 
     // Making the call
     function makeCallImpl(to, remoteName, remoteNumber){
+        console.log("placing call to " + to + ", from " + remoteName + "@" + remoteNumber);
 
         sip.send({
             method: 'INVITE',
@@ -224,10 +226,7 @@ module.exports = function(ipAddress){
                   console.log(JSON.stringify(dialogs));
                 }
                 sendAck(rs.headers.contact[0].uri, rs.headers.to, rs.headers.from, rs.headers['call-id'], rs.headers.cseq.seq);
-
-
                 // registring our 'dialog' which is just function to process in-dialog requests
-
               }
             });
     }
