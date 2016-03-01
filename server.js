@@ -10,6 +10,7 @@ var app = express();
 app.use(bodyParser.json());
 
 var _configuration = {};
+var _availableIpAddresses = [];
 
 function determineIpAddress(){
 
@@ -33,6 +34,7 @@ function determineIpAddress(){
         } else {
           // this interface has only one ipv4 adress
           console.log(ifname, iface.address);
+          _availableIpAddresses.push (iface.address);
         }
         ++alias;
 
@@ -42,7 +44,7 @@ function determineIpAddress(){
       });
     });
 
-    //ip = '172.17.50.127'
+    //ip = '172.17.179.40'
     return ip;
 }
 
@@ -118,6 +120,18 @@ app.get('/startsimulation', function (req, res) {
 app.get('/stopsimulation', function (req, res) {
     simulator.stop(_configuration);
     res.send();
+});
+
+app.all('/setip/:ip', function (req, res) {
+    var ip = req.params.ip;
+    ipAddress = ip;
+    simulator.setIp(ip);
+    sipEngine.setIp(ip);
+    res.send();
+});
+
+app.get('/allips', function (req, res) {
+    res.send(_availableIpAddresses);
 });
 
 

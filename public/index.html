@@ -23,16 +23,17 @@
             <h3 class="panel-title">System Information</h3>
           </div>
           <div class="panel-body">
-            <div class="container">
-              <div class="row">
+            <form class="form-horizontal">
+              <div class="form-group">
                   <div class="col-md-2"><b>Edge</b></div>
                   <div class="col-md-6" id="edgeName">{{edgeName}}{{edgeIp}}</div>
               </div>
-              <div class="row">
+              <div class="form-group">
                   <div class="col-md-2"><b>Simulator IP</b></div>
-                  <div class="col-md-6 simulatorIp">{{deviceIp}}</div>
+                  <select id='ipaddresses' class="form-control" style="width:150px"></select>
+
               </div>
-            </div>
+          </form>
 
         </div>
     </div>

@@ -4,6 +4,7 @@ function getStatus(){
         $("#callsInProgress").html(status.simulation.callsInProgress);
         $("#registeredPhones").html(status.stations.registeredPhoneList.length);
         $(".simulatorIp").html(status.simIp);
+        $("#ipaddresses").val(status.simIp);
 
         if(status.isRunning){
             $("#startSimulation").hide();
@@ -19,7 +20,16 @@ function getConfiguration(){
     $.getJSON('/configuration', function (config) {
         $("#configuredPhones").html(config.stations.length);
         $("#edgeName").html(config.edgeServer.ip);
+    });
 
+    $.getJSON('/allips', function (config) {
+        var optionsAsString = "";
+        for(var i = 0; i < config.length; i++) {
+            optionsAsString += "<option value='" + config[i] + "'>" + config[i] + "</option>";
+        }
+        $("#ipaddresses").append($(optionsAsString));
+
+        getStatus();
     });
 }
 $(function() {
@@ -30,6 +40,16 @@ $(function() {
         $.get("/dial/" + $("#dialNumber").val());
         event.preventDefault();
         return false;
+    });
+
+    $( "#ipaddresses" ).change(function() {
+        $.ajax({
+          url:"/setip/" + $(this).val(),
+          type:"POST",
+          data:JSON.stringify({}),
+          contentType:"application/json",
+          dataType:"json"
+      });
     });
 
     $("#startSimulation").click(function(){
